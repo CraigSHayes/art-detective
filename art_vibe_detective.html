@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Art Vibe Detective</title>
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & WARM GALLERY PALETTE (Zero external fonts or libraries)
+       ========================================================================== */
+    :root {
+      --bg-parchment: #FAF6F0;
+      --card-surface: #FFFFFF;
+      --ink-primary: #1F2933;
+      --ink-muted: #52606D;
+      --accent-terracotta: #D95D39;
+      --accent-terracotta-dark: #B84726;
+      --accent-teal: #1D4E5F;
+      --accent-ochre: #E8A838;
+      --accent-sage: #2E7D5B;
+      --accent-sage-light: #E6F4EE;
+      --wrong-soft: #FDF2EC;
+      --border-warm: #E5DDD0;
+      --shadow-soft: 0 6px 18px rgba(31, 41, 51, 0.08);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-parchment);
+      color: var(--ink-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+    }
+
+    /* Main responsive container that fits comfortably on phones without overflow */
+    .app-shell {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       SCREEN CONTAINERS
+       ========================================================================== */
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      animation: fadeSlideIn 0.3s ease-out;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       CARDS & SHARED UI ELEMENTS
+       ========================================================================== */
+    .card {
+      background: var(--card-surface);
+      border: 2px solid var(--border-warm);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn {
+      min-height: 52px; /* >= 48px touch target guarantee */
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent-terracotta);
+      color: #FFFFFF;
+      box-shadow: 0 4px 0 var(--accent-terracotta-dark);
+      width: 100%;
+      font-size: 1.15rem;
+    }
+
+    .btn-primary:hover {
+      background: #E26743;
+    }
+
+    .btn-secondary {
+      background: var(--accent-teal);
+      color: #FFFFFF;
+      box-shadow: 0 4px 0 #123440;
+      width: 100%;
+    }
+
+    /* ==========================================================================
+       START SCREEN
+       ========================================================================== */
+    .start-hero {
+      text-align: center;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFF3DC;
+      color: #8A5A00;
+      border: 1.5px solid #F2D08A;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--accent-teal);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .rule-sentence {
+      font-size: 1.05rem;
+      color: var(--ink-muted);
+      max-width: 38ch;
+    }
+
+    .player-select-box {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .player-select-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .player-count-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .count-btn {
+      min-height: 52px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border-warm);
+      background: var(--bg-parchment);
+      color: var(--ink-primary);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .count-btn.selected {
+      background: var(--accent-teal);
+      color: #FFFFFF;
+      border-color: var(--accent-teal);
+      box-shadow: 0 3px 10px rgba(29, 78, 95, 0.25);
+    }
+
+    /* ==========================================================================
+       TOP HUD & SCOREBOARD (ALWAYS VISIBLE IN GAME)
+       ========================================================================== */
+    .hud-header {
+      background: var(--card-surface);
+      border: 2px solid var(--border-warm);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hud-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .round-pill {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      background: var(--bg-parchment);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-warm);
+    }
+
+    .turn-pill {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      background: var(--accent-terracotta);
+      padding: 6px 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scoreboard-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 8px;
+    }
+
+    .score-chip {
+      background: var(--bg-parchment);
+      border: 2px solid var(--border-warm);
+      border-radius: 12px;
+      padding: 6px 8px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .score-chip.active-turn {
+      border-color: var(--accent-terracotta);
+      background: #FFF5F1;
+      transform: translateY(-1px);
+    }
+
+    .score-chip .p-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      display: block;
+    }
+
+    .score-chip.active-turn .p-name {
+      color: var(--accent-terracotta);
+    }
+
+    .score-chip .p-pts {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--ink-primary);
+    }
+
+    /* ==========================================================================
+       CLUE STAGE (VISUAL SVG HINT + VIBE CLUE)
+       ========================================================================== */
+    .clue-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .clue-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .medium-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: #E8F1F4;
+      color: var(--accent-teal);
+    }
+
+    .visual-frame {
+      width: 100%;
+      height: 128px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 2px solid var(--border-warm);
+      background: #F4EFE6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .visual-frame svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .vibe-quote {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: var(--ink-primary);
+      background: #FFFBF4;
+      border-left: 4px solid var(--accent-ochre);
+      padding: 10px 14px;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .fun-fact-box {
+      display: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #1B543B;
+      background: var(--accent-sage-light);
+      border: 1.5px solid #B7DFC9;
+      padding: 10px 12px;
+      border-radius: 12px;
+      animation: fadeSlideIn 0.25s ease-out;
+    }
+
+    .fun-fact-box.visible {
+      display: block;
+    }
+
+    /* ==========================================================================
+       FEEDBACK BANNER (HAPPY CELEBRATION OR GENTLE TRY AGAIN)
+       ========================================================================== */
+    .feedback-bar {
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .feedback-neutral {
+      background: transparent;
+      color: var(--ink-muted);
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 4px;
+      min-height: 28px;
+    }
+
+    .feedback-wrong {
+      background: var(--wrong-soft);
+      border: 2px solid #F3C6B4;
+      color: #9C3D1E;
+      animation: gentleWiggle 0.35s ease;
+    }
+
+    .feedback-correct {
+      background: var(--accent-sage-light);
+      border: 2px solid var(--accent-sage);
+      color: #1B543B;
+      animation: happyPop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes gentleWiggle {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    @keyframes happyPop {
+      0% { transform: scale(0.92); }
+      60% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    /* ==========================================================================
+       MULTIPLE CHOICE TAP OPTIONS (>= 48PX TALL)
+       ========================================================================== */
+    .choices-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      min-height: 58px;
+      padding: 12px 16px;
+      background: var(--card-surface);
+      border: 2px solid var(--border-warm);
+      border-radius: var(--radius-md);
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      box-shadow: 0 3px 0 var(--border-warm);
+      transition: transform 0.1s ease, background-color 0.15s ease, border-color 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .choice-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--border-warm);
+    }
+
+    .choice-title {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--ink-primary);
+    }
+
+    .choice-artist {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    .choice-btn.eliminated {
+      opacity: 0.45;
+      background: #F4EFE6;
+      border-color: #DCD3C4;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .choice-btn.eliminated .choice-title {
+      text-decoration: line-through;
+    }
+
+    .choice-btn.revealed-correct {
+      background: var(--accent-sage-light);
+      border-color: var(--accent-sage);
+      box-shadow: 0 4px 0 var(--accent-sage);
+      animation: happyPop 0.4s ease;
+    }
+
+    .choice-btn.revealed-correct .choice-title {
+      color: #164A33;
+    }
+
+    /* ==========================================================================
+       END SCREEN
+       ========================================================================== */
+    .end-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 18px;
+    }
+
+    .winner-banner {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--accent-terracotta);
+    }
+
+    .final-scores-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .final-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-parchment);
+      border: 2px solid var(--border-warm);
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+
+    .final-row.top-winner {
+      background: #FFF6E0;
+      border-color: var(--accent-ochre);
+    }
+
+    /* ==========================================================================
+       CONFETTI BURST LAYER (CSS ONLY + LIGHTWEIGHT DOM PARTICLES)
+       ========================================================================== */
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      animation: confettiFall 1.1s ease-out forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <!-- ======================================================================
+         SCREEN 1: START SCREEN
+         ====================================================================== -->
+    <section id="startScreen" class="screen active" aria-label="Start Screen">
+      <div class="card start-hero">
+        <!-- Hand-drawn museum palette emblem -->
+        <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
+          <circle cx="40" cy="40" r="36" fill="#1D4E5F" />
+          <path d="M18 46 Q28 22 44 26 T62 42 Q56 58 38 56 T18 46 Z" fill="#FAF6F0" />
+          <circle cx="31" cy="36" r="5" fill="#D95D39" />
+          <circle cx="46" cy="33" r="4.5" fill="#E8A838" />
+          <circle cx="51" cy="46" r="4.5" fill="#2E7D5B" />
+          <rect x="33" y="45" width="8" height="8" rx="2" fill="#1D4E5F" />
+        </svg>
+
+        <span class="badge-pill">Painting • Sculpture • Architecture</span>
+        <h1>Art Vibe Detective</h1>
+        <p class="rule-sentence">
+          Read the wild vibe clue, inspect the abstract shape hint, and guess the famous painting, sculpture, or building!
+        </p>
+
+        <div class="player-select-box">
+          <div class="player-select-label">How many players around the screen?</div>
+          <div class="player-count-row" role="group" aria-label="Select number of players">
+            <button type="button" class="count-btn selected" data-players="2">2 Players</button>
+            <button type="button" class="count-btn" data-players="3">3 Players</button>
+            <button type="button" class="count-btn" data-players="4">4 Players</button>
+          </div>
+        </div>
+
+        <button type="button" id="startBtn" class="btn btn-primary">Start Game</button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SCREEN 2: GAMEPLAY SCREEN
+         ====================================================================== -->
+    <section id="gameScreen" class="screen" aria-label="Game Screen">
+      <!-- Top HUD with Round, Turn Indicator & Persistent Scoreboard -->
+      <header class="hud-header">
+        <div class="hud-top-row">
+          <span class="round-pill" id="roundIndicator">Round 1 of 6</span>
+          <span class="turn-pill" id="turnIndicator">Player 1's Turn</span>
+        </div>
+        <div class="scoreboard-strip" id="scoreboardStrip"></div>
+      </header>
+
+      <!-- Visual Hint + Wild Vibe Clue Card -->
+      <article class="card clue-card">
+        <div class="clue-meta-row">
+          <span class="medium-badge" id="mediumBadge"></span>
+          <span style="font-size:0.82rem; color:var(--ink-muted); font-weight:700;">1st-try solve = +1 pt</span>
+        </div>
+
+        <!-- Minimalist geometric & color palette hint rendered via inline SVG -->
+        <div class="visual-frame" id="visualFrame" aria-label="Abstract visual hint"></div>
+
+        <!-- Sideways, non-literal poetic description -->
+        <p class="vibe-quote" id="vibeClueText"></p>
+
+        <!-- Post-solve celebratory fun fact -->
+        <p class="fun-fact-box" id="funFactBox"></p>
+      </article>
+
+      <!-- Gentle Feedback / Happy Celebration Banner -->
+      <div id="feedbackBanner" class="feedback-bar feedback-neutral" role="status" aria-live="polite">
+        Tap the artwork &amp; creator that matches this vibe!
+      </div>
+
+      <!-- 4 Large Touch-Friendly Options -->
+      <div class="choices-grid" id="choicesGrid"></div>
+
+      <!-- Next Round Action Button (appears once solved) -->
+      <button type="button" id="nextRoundBtn" class="btn btn-secondary" style="display:none;">
+        Next Round →
+      </button>
+    </section>
+
+    <!-- ======================================================================
+         SCREEN 3: END SCREEN
+         ====================================================================== -->
+    <section id="endScreen" class="screen" aria-label="Final Results">
+      <div class="card end-card">
+        <svg width="72" height="72" viewBox="0 0 80 80" aria-hidden="true">
+          <circle cx="40" cy="40" r="36" fill="#E8A838" />
+          <path d="M26 26 H54 V38 C54 47 47 53 40 53 C33 53 26 47 26 38 Z" fill="#FFFFFF" />
+          <rect x="36" y="52" width="8" height="10" fill="#FFFFFF" />
+          <rect x="28" y="61" width="24" height="5" rx="2.5" fill="#1D4E5F" />
+        </svg>
+
+        <div class="winner-banner" id="winnerHeadline">Player 1 Wins!</div>
+        <p style="color:var(--ink-muted); font-weight:600;">Final Gallery Standings</p>
+
+        <div class="final-scores-list" id="finalScoresList"></div>
+
+        <button type="button" id="playAgainBtn" class="btn btn-primary">Play Again (Fresh Set)</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ==========================================================================
+       1. CURATED ARTWORK DATABASE (18 WORKS: PAINTING, SCULPTURE, ARCHITECTURE)
+       Each item is built from its answer with:
+       - Unique abstract geometric/color SVG hint (zero external URLs)
+       - Poetic, non-literal "vibe clue"
+       - Post-solve fun fact & 3 plausible distractors
+       ========================================================================== */
+    const ARTWORKS = [
+      // --- PAINTINGS (6) ---
+      {
+        id: "starry-night",
+        medium: "Painting",
+        title: "The Starry Night",
+        artist: "Vincent van Gogh",
+        vibe: "A dizzy midnight daydream where the wind itself turns visible, whipping golden halos and restless blue currents over a sleepy village.",
+        fact: "Painted in June 1889 from the east-facing window of Van Gogh's asylum room in Saint-Rémy-de-Provence.",
+        distractors: [
+          { title: "American Gothic", artist: "Grant Wood" },
+          { title: "The Persistence of Memory", artist: "Salvador Dalí" },
+          { title: "Water Lilies", artist: "Claude Monet" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#13294B"/>
+          <path d="M0 70 Q70 25 140 65 T280 55 T320 65 L320 120 L0 120 Z" fill="#1E487C"/>
+          <circle cx="95" cy="48" r="24" fill="none" stroke="#F4C430" stroke-width="5" stroke-dasharray="14 8"/>
+          <circle cx="95" cy="48" r="11" fill="#FFE875"/>
+          <circle cx="245" cy="36" r="18" fill="none" stroke="#F9D949" stroke-width="4" stroke-dasharray="10 6"/>
+          <path d="M35 120 Q45 55 52 28 Q62 58 68 120 Z" fill="#0B1626"/>
+        </svg>`
+      },
+      {
+        id: "persistence-memory",
+        medium: "Painting",
+        title: "The Persistence of Memory",
+        artist: "Salvador Dalí",
+        vibe: "Time literally gives up and melts like hot mozzarella over a lonely desert picnic while ants march across a pocket watch.",
+        fact: "Dalí said the idea for the limp watches came from watching Camembert cheese melt in the warm sun.",
+        distractors: [
+          { title: "Girl with a Pearl Earring", artist: "Johannes Vermeer" },
+          { title: "The Great Wave off Kanagawa", artist: "Hokusai" },
+          { title: "Nighthawks", artist: "Edward Hopper" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="62" fill="#D9A05B"/>
+          <rect y="62" width="320" height="58" fill="#5C4433"/>
+          <rect x="35" y="42" width="88" height="44" rx="6" fill="#C68B59"/>
+          <path d="M68 42 C95 42 105 68 92 92 C82 108 62 102 64 82 C66 64 56 42 68 42 Z" fill="#F2D16B" stroke="#1D4E5F" stroke-width="3"/>
+          <path d="M185 72 C225 65 245 85 232 102 C215 112 180 96 185 72 Z" fill="#E8E2D5" stroke="#52606D" stroke-width="3"/>
+        </svg>`
+      },
+      {
+        id: "great-wave",
+        medium: "Painting",
+        title: "The Great Wave off Kanagawa",
+        artist: "Hokusai",
+        vibe: "An ocean monster made of frothy white claws towers above tiny rowers, freezing a split-second of roaring sea chaos.",
+        fact: "This iconic Japanese woodblock print was created around 1831 using newly imported Prussian blue pigment.",
+        distractors: [
+          { title: "A Sunday Afternoon on La Grande Jatte", artist: "Georges Seurat" },
+          { title: "The Scream", artist: "Edvard Munch" },
+          { title: "Guernica", artist: "Pablo Picasso" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#F3E5C8"/>
+          <polygon points="235,98 265,64 295,98" fill="#2B4C7E"/>
+          <polygon points="256,74 265,64 274,74" fill="#FFFFFF"/>
+          <path d="M15 120 C20 35 125 12 165 55 C140 52 115 68 122 95 L180 120 Z" fill="#1B3B6F"/>
+          <circle cx="152" cy="40" r="6" fill="#FFFFFF"/>
+          <circle cx="166" cy="48" r="5" fill="#FFFFFF"/>
+          <circle cx="138" cy="34" r="5" fill="#FFFFFF"/>
+        </svg>`
+      },
+      {
+        id: "the-scream",
+        medium: "Painting",
+        title: "The Scream",
+        artist: "Edvard Munch",
+        vibe: "A sunset turns blood-orange and shrieks so loudly that a noodle-limbed walker on a wooden bridge claps both hands over their ears.",
+        fact: "Munch wrote in his diary that he felt an 'infinite scream passing through nature' while walking at sunset in Oslo.",
+        distractors: [
+          { title: "Mona Lisa", artist: "Leonardo da Vinci" },
+          { title: "Composition VIII", artist: "Wassily Kandinsky" },
+          { title: "The Birth of Venus", artist: "Sandro Botticelli" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#1F364D"/>
+          <path d="M0 0 L320 0 L320 44 Q180 62 0 36 Z" fill="#E85D2A"/>
+          <path d="M0 18 Q160 40 320 15 L320 30 Q160 52 0 30 Z" fill="#F4A236"/>
+          <polygon points="0,120 190,48 225,52 95,120" fill="#6E472B"/>
+          <ellipse cx="145" cy="74" rx="11" ry="15" fill="#F2D3A8"/>
+          <ellipse cx="145" cy="79" rx="3" ry="5" fill="#1F2933"/>
+        </svg>`
+      },
+      {
+        id: "broadway-boogie",
+        medium: "Painting",
+        title: "Broadway Boogie Woogie",
+        artist: "Piet Mondrian",
+        vibe: "Jazz music translated into neon taxi-cab traffic—pure primary-color blocks blinking along a crisp city street grid.",
+        fact: "Completed in 1943 after Mondrian moved to Manhattan and fell in love with New York's grid and boogie-woogie jazz.",
+        distractors: [
+          { title: "Cafe Terrace at Night", artist: "Vincent van Gogh" },
+          { title: "The Kiss", artist: "Gustav Klimt" },
+          { title: "Impression, Sunrise", artist: "Claude Monet" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#F7F5EE"/>
+          <rect x="0" y="28" width="320" height="12" fill="#F5C71A"/>
+          <rect x="0" y="78" width="320" height="12" fill="#F5C71A"/>
+          <rect x="64" y="0" width="14" height="120" fill="#F5C71A"/>
+          <rect x="210" y="0" width="14" height="120" fill="#F5C71A"/>
+          <rect x="64" y="28" width="14" height="12" fill="#D93829"/>
+          <rect x="210" y="78" width="14" height="12" fill="#1D56A8"/>
+          <rect x="125" y="28" width="16" height="12" fill="#1D56A8"/>
+          <rect x="145" y="78" width="18" height="12" fill="#D93829"/>
+        </svg>`
+      },
+      {
+        id: "the-kiss-klimt",
+        medium: "Painting",
+        title: "The Kiss",
+        artist: "Gustav Klimt",
+        vibe: "Two lovers wrapped in a shimmering bathrobe of real gold leaf, mosaics, and flower-strewn spirals on the edge of a meadow.",
+        fact: "Klimt used genuine gold, silver, and platinum leaf on this 1908 masterpiece during his famous 'Golden Phase.'",
+        distractors: [
+          { title: "The Night Watch", artist: "Rembrandt" },
+          { title: "Las Meninas", artist: "Diego Velázquez" },
+          { title: "Whistler's Mother", artist: "James McNeill Whistler" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#3D3522"/>
+          <path d="M110 120 C110 38 140 20 165 20 C190 20 212 42 212 120 Z" fill="#E8B923"/>
+          <rect x="132" y="45" width="16" height="22" fill="#1F2933"/>
+          <rect x="154" y="54" width="14" height="18" fill="#FAF6F0"/>
+          <circle cx="182" cy="64" r="9" fill="none" stroke="#8A5A00" stroke-width="3"/>
+          <circle cx="144" cy="88" r="8" fill="#D95D39"/>
+        </svg>`
+      },
+
+      // --- SCULPTURES (6) ---
+      {
+        id: "the-thinker",
+        medium: "Sculpture",
+        title: "The Thinker",
+        artist: "Auguste Rodin",
+        vibe: "A giant bronze guy having the world's heaviest existential crisis with his chin planted squarely on his fist.",
+        fact: "Originally conceived as a smaller figure of poet Dante gazing down at the circles of Hell in Rodin's 'Gates of Hell.'",
+        distractors: [
+          { title: "Venus de Milo", artist: "Alexandros of Antioch" },
+          { title: "Balloon Dog", artist: "Jeff Koons" },
+          { title: "Little Dancer Aged Fourteen", artist: "Edgar Degas" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#EDE4D7"/>
+          <rect x="115" y="88" width="90" height="32" rx="4" fill="#4A4138"/>
+          <path d="M135 88 C135 55 152 44 172 52 C186 58 185 76 174 88 Z" fill="#2D3A34"/>
+          <circle cx="164" cy="36" r="13" fill="#2D3A34"/>
+          <path d="M154 46 L166 56 L152 68" fill="none" stroke="#1E2823" stroke-width="6" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        id: "balloon-dog",
+        medium: "Sculpture",
+        title: "Balloon Dog",
+        artist: "Jeff Koons",
+        vibe: "A giant birthday-party clown twist blown up to ten-foot stainless-steel scale, gleaming like a mirror-finish candy toy.",
+        fact: "Weighing about one ton, its mirror-polished stainless steel surface looks inflatable even though it is solid metal.",
+        distractors: [
+          { title: "David", artist: "Michelangelo" },
+          { title: "Bird in Space", artist: "Constantin Brâncuși" },
+          { title: "The Burghers of Calais", artist: "Auguste Rodin" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#F5F7FA"/>
+          <ellipse cx="115" cy="86" rx="12" ry="22" fill="#E61C66"/>
+          <ellipse cx="205" cy="86" rx="12" ry="22" fill="#E61C66"/>
+          <rect x="112" y="56" width="96" height="24" rx="12" fill="#FF2A7A"/>
+          <ellipse cx="115" cy="42" rx="12" ry="22" fill="#FF2A7A"/>
+          <ellipse cx="98" cy="28" rx="18" ry="11" fill="#FF5C99"/>
+          <circle cx="216" cy="46" r="9" fill="#FF5C99"/>
+        </svg>`
+      },
+      {
+        id: "david-michelangelo",
+        medium: "Sculpture",
+        title: "David",
+        artist: "Michelangelo",
+        vibe: "Seventeen feet of cool white Tuscan marble radiating calm underdog confidence—one hand relaxed, the other hiding a slingshot.",
+        fact: "Michelangelo carved David between 1501 and 1504 from a single block of Carrara marble that two earlier sculptors had abandoned.",
+        distractors: [
+          { title: "Cloud Gate (The Bean)", artist: "Anish Kapoor" },
+          { title: "The Terracotta Army", artist: "Qin Artisans" },
+          { title: "Maman (Giant Spider)", artist: "Louise Bourgeois" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#233942"/>
+          <rect x="128" y="96" width="64" height="24" fill="#A9B4B8"/>
+          <rect x="148" y="42" width="24" height="54" rx="8" fill="#F8FAFC"/>
+          <circle cx="160" cy="26" r="12" fill="#F8FAFC"/>
+          <path d="M148 45 L136 74" stroke="#E2E8F0" stroke-width="6" stroke-linecap="round"/>
+          <path d="M172 45 L168 32" stroke="#E2E8F0" stroke-width="6" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        id: "cloud-gate",
+        medium: "Sculpture",
+        title: "Cloud Gate",
+        artist: "Anish Kapoor",
+        vibe: "A giant liquid-mercury jellybean landed in a city park, bending skyscrapers and selfie-takers into a funhouse chrome mirror.",
+        fact: "Nicknamed 'The Bean' by Chicagoans, its seamless exterior is welded from 168 stainless steel plates.",
+        distractors: [
+          { title: "Statue of Liberty", artist: "Frédéric Auguste Bartholdi" },
+          { title: "Winged Victory of Samothrace", artist: "Hellenistic Master" },
+          { title: "Pieta", artist: "Michelangelo" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="84" fill="#CBE3F5"/>
+          <rect y="84" width="320" height="36" fill="#CBD5E1"/>
+          <path d="M68 84 C68 30 252 30 252 84 C220 84 205 64 160 64 C115 64 100 84 68 84 Z" fill="#64748B" stroke="#334155" stroke-width="3"/>
+          <path d="M92 52 Q160 36 228 52" fill="none" stroke="#F8FAFC" stroke-width="5" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        id: "winged-victory",
+        medium: "Sculpture",
+        title: "Winged Victory of Samothrace",
+        artist: "Hellenistic Master",
+        vibe: "Wind-whipped stone robes clinging to a headless angel landing triumphantly on the prow of a stone warship.",
+        fact: "Discovered in 1863 on the Greek island of Samothrace, it now commands the grand Daru staircase in the Louvre.",
+        distractors: [
+          { title: "The Kiss", artist: "Constantin Brâncuși" },
+          { title: "Fountain", artist: "Marcel Duchamp" },
+          { title: "Mobile", artist: "Alexander Calder" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#2A3B4C"/>
+          <polygon points="115,92 205,92 190,115 130,115" fill="#94A3B8"/>
+          <path d="M150 92 L145 45 L175 45 L170 92 Z" fill="#F1E8D9"/>
+          <path d="M148 54 L92 18 L118 64 Z" fill="#FAF6F0"/>
+          <path d="M172 54 L228 18 L202 64 Z" fill="#FAF6F0"/>
+        </svg>`
+      },
+      {
+        id: "ecstasy-saint-teresa",
+        medium: "Sculpture",
+        title: "Ecstasy of Saint Teresa",
+        artist: "Gian Lorenzo Bernini",
+        vibe: "Floating on a stone cloud while golden sunbeams rain from above, a marble figure swoons in swirling theatrical drapery.",
+        fact: "Bernini hid a concealed window above this Roman chapel niche so natural sunlight illuminates the gilded bronze rays.",
+        distractors: [
+          { title: "Laocoön and His Sons", artist: "Agesander of Rhodes" },
+          { title: "The Gates of Hell", artist: "Auguste Rodin" },
+          { title: "Unique Forms of Continuity in Space", artist: "Umberto Boccioni" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#3B2322"/>
+          <line x1="160" y1="0" x2="120" y2="95" stroke="#F4C430" stroke-width="3"/>
+          <line x1="160" y1="0" x2="160" y2="100" stroke="#F4C430" stroke-width="4"/>
+          <line x1="160" y1="0" x2="200" y2="95" stroke="#F4C430" stroke-width="3"/>
+          <path d="M110 85 Q145 48 185 68 T215 92 Q160 112 110 85 Z" fill="#FAF6F0"/>
+        </svg>`
+      },
+
+      // --- ARCHITECTURE (6) ---
+      {
+        id: "fallingwater",
+        medium: "Architecture",
+        title: "Fallingwater",
+        artist: "Frank Lloyd Wright",
+        vibe: "Creamy concrete trays jut boldly out of a forest cliffside so a mountain waterfall can rush right underneath the living room.",
+        fact: "Built in 1939 in rural Pennsylvania, Wright designed the house over the waterfall rather than merely looking at it.",
+        distractors: [
+          { title: "The Parthenon", artist: "Iktinos & Kallikrates" },
+          { title: "Notre-Dame Cathedral", artist: "Maurice de Sully" },
+          { title: "Taj Mahal", artist: "Ustad Ahmad Lahori" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#2D4F3E"/>
+          <rect x="65" y="34" width="135" height="16" rx="3" fill="#F4EBD9"/>
+          <rect x="95" y="56" width="150" height="16" rx="3" fill="#EAE0C8"/>
+          <rect x="135" y="18" width="28" height="62" fill="#8C6D4F"/>
+          <rect x="115" y="72" width="38" height="48" fill="#5BC0EB"/>
+          <line x1="126" y1="72" x2="126" y2="120" stroke="#FFFFFF" stroke-width="3"/>
+          <line x1="140" y1="72" x2="140" y2="120" stroke="#FFFFFF" stroke-width="3"/>
+        </svg>`
+      },
+      {
+        id: "sydney-opera-house",
+        medium: "Architecture",
+        title: "Sydney Opera House",
+        artist: "Jørn Utzon",
+        vibe: "Giant concrete seashells frozen mid-gasp—or wind-filled yacht sails—clustered beside a sparkling blue harbor.",
+        fact: "Over one million self-cleaning cream and white Swedish tiles cover the iconic precast concrete roof shells.",
+        distractors: [
+          { title: "The Colosseum", artist: "Vespasian & Titus" },
+          { title: "Empire State Building", artist: "Shreve, Lamb & Harmon" },
+          { title: "Stonehenge", artist: "Neolithic Builders" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="92" fill="#8ECAE6"/>
+          <rect y="92" width="320" height="28" fill="#1D4E5F"/>
+          <path d="M55 92 C60 45 95 25 120 22 C112 52 112 75 118 92 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+          <path d="M110 92 C118 35 162 15 192 14 C180 48 180 74 186 92 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+          <path d="M180 92 C188 50 222 34 252 34 C242 60 242 78 248 92 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+        </svg>`
+      },
+      {
+        id: "guggenheim-nyc",
+        medium: "Architecture",
+        title: "Guggenheim Museum (NYC)",
+        artist: "Frank Lloyd Wright",
+        vibe: "A giant creamy-white ribbon coiled like a soft-serve ice cream cone or snail shell rising right beside Central Park.",
+        fact: "Visitors take an elevator to the top and stroll gently down a continuous quarter-mile spiral ramp.",
+        distractors: [
+          { title: "Sagrada Família", artist: "Antoni Gaudí" },
+          { title: "The Louvre Pyramid", artist: "I. M. Pei" },
+          { title: "Burj Khalifa", artist: "Adrian Smith" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#DCE8E2"/>
+          <ellipse cx="160" cy="26" rx="88" ry="12" fill="#FAF6F0" stroke="#C5BDB0" stroke-width="3"/>
+          <ellipse cx="160" cy="48" rx="76" ry="11" fill="#F3ECE0" stroke="#C5BDB0" stroke-width="3"/>
+          <ellipse cx="160" cy="70" rx="64" ry="10" fill="#FAF6F0" stroke="#C5BDB0" stroke-width="3"/>
+          <rect x="104" y="80" width="112" height="32" fill="#EAE2D3" stroke="#C5BDB0" stroke-width="3"/>
+        </svg>`
+      },
+      {
+        id: "taj-mahal",
+        medium: "Architecture",
+        title: "Taj Mahal",
+        artist: "Ustad Ahmad Lahori",
+        vibe: "A symmetrical white marble love poem crowned with a floating onion dome and four slender corner towers over a still reflecting pool.",
+        fact: "The four outer minarets lean slightly outward so that in an earthquake they would fall away from the central tomb.",
+        distractors: [
+          { title: "Eiffel Tower", artist: "Gustave Eiffel" },
+          { title: "Guggenheim Bilbao", artist: "Frank Gehry" },
+          { title: "Flatiron Building", artist: "Daniel Burnham" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="94" fill="#FDE8D7"/>
+          <rect y="94" width="320" height="26" fill="#4EA8DE"/>
+          <rect x="65" y="34" width="8" height="60" fill="#FFFFFF"/>
+          <rect x="247" y="34" width="8" height="60" fill="#FFFFFF"/>
+          <rect x="108" y="54" width="104" height="40" fill="#FFFFFF"/>
+          <path d="M132 54 C132 26 160 14 160 14 C160 14 188 26 188 54 Z" fill="#FFFFFF"/>
+          <path d="M148 94 V72 C148 64 172 64 172 72 V94 Z" fill="#CBD5E1"/>
+        </svg>`
+      },
+      {
+        id: "louvre-pyramid",
+        medium: "Architecture",
+        title: "The Louvre Pyramid",
+        artist: "I. M. Pei",
+        vibe: "A futuristic diamond-paned glass triangle dropped straight into the courtyard of a centuries-old royal stone palace.",
+        fact: "Opened in 1989, its geometry echoes the proportions of the Great Pyramid of Giza in Egypt.",
+        distractors: [
+          { title: "The Parthenon", artist: "Iktinos & Kallikrates" },
+          { title: "Hagia Sophia", artist: "Anthemius & Isidore" },
+          { title: "Machu Picchu", artist: "Inca Builders" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="96" fill="#E6D5B8"/>
+          <rect y="96" width="320" height="24" fill="#94A3B8"/>
+          <polygon points="160,20 82,96 238,96" fill="#B8E2F8" stroke="#1D4E5F" stroke-width="3"/>
+          <line x1="160" y1="20" x2="125" y2="96" stroke="#1D4E5F" stroke-width="2"/>
+          <line x1="160" y1="20" x2="195" y2="96" stroke="#1D4E5F" stroke-width="2"/>
+          <line x1="121" y1="58" x2="199" y2="58" stroke="#1D4E5F" stroke-width="2"/>
+        </svg>`
+      },
+      {
+        id: "notre-dame-paris",
+        medium: "Architecture",
+        title: "Notre-Dame Cathedral",
+        artist: "Maurice de Sully & Medieval Builders",
+        vibe: "Twin stone bell towers framing a giant stained-glass kaleidoscope wheel, braced by stone ribs that leap like spider legs.",
+        fact: "Constructed between 1163 and 1345 on an island in the Seine, it helped pioneer external flying buttresses.",
+        distractors: [
+          { title: "St. Basil's Cathedral", artist: "Postnik Yakovlev" },
+          { title: "The Pantheon", artist: "Apollodorus of Damascus" },
+          { title: "Chrysler Building", artist: "William Van Alen" }
+        ],
+        svg: `<svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <rect width="320" height="120" fill="#DCE6F1"/>
+          <rect x="108" y="18" width="28" height="96" fill="#C9BEA9"/>
+          <rect x="184" y="18" width="28" height="96" fill="#C9BEA9"/>
+          <rect x="136" y="46" width="48" height="68" fill="#D8CEBC"/>
+          <circle cx="160" cy="68" r="16" fill="#D95D39" stroke="#1D4E5F" stroke-width="3"/>
+          <circle cx="160" cy="68" r="7" fill="#F4C430"/>
+        </svg>`
+      }
+    ];
+
+    /* ==========================================================================
+       2. GAME STATE & CONFIGURATION
+       ========================================================================== */
+    let totalRounds = 6;
+    let playerCount = 2;
+    let scores = [];
+    let currentRoundIndex = 0;
+    let currentPlayerIndex = 0;
+    let roundDeck = [];
+    let firstTryAvailable = true;
+    let roundSolved = false;
+
+    /* ==========================================================================
+       3. DOM REFERENCES
+       ========================================================================== */
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const endScreen = document.getElementById("endScreen");
+
+    const countButtons = document.querySelectorAll(".count-btn");
+    const startBtn = document.getElementById("startBtn");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const nextRoundBtn = document.getElementById("nextRoundBtn");
+
+    const roundIndicator = document.getElementById("roundIndicator");
+    const turnIndicator = document.getElementById("turnIndicator");
+    const scoreboardStrip = document.getElementById("scoreboardStrip");
+    const mediumBadge = document.getElementById("mediumBadge");
+    const visualFrame = document.getElementById("visualFrame");
+    const vibeClueText = document.getElementById("vibeClueText");
+    const funFactBox = document.getElementById("funFactBox");
+    const feedbackBanner = document.getElementById("feedbackBanner");
+    const choicesGrid = document.getElementById("choicesGrid");
+    const winnerHeadline = document.getElementById("winnerHeadline");
+    const finalScoresList = document.getElementById("finalScoresList");
+    const confettiLayer = document.getElementById("confettiLayer");
+
+    /* ==========================================================================
+       4. UTILITY FUNCTIONS (SHUFFLE, SCREEN SWITCHING, CELEBRATION)
+       ========================================================================== */
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function showScreen(screenEl) {
+      [startScreen, gameScreen, endScreen].forEach(s => s.classList.remove("active"));
+      screenEl.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Small happy confetti animation for right answers
+    function triggerHappyBurst() {
+      const colors = ["#D95D39", "#E8A838", "#2E7D5B", "#1D4E5F", "#FF6B6B"];
+      for (let i = 0; i < 24; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.backgroundColor = colors[i % colors.length];
+        piece.style.left = "50%";
+        piece.style.top = "42%";
+        const angle = (Math.PI * 2 * i) / 24 + (Math.random() * 0.4 - 0.2);
+        const distance = 90 + Math.random() * 140;
+        piece.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+        piece.style.setProperty("--dy", `${Math.sin(angle) * distance - 30}px`);
+        confettiLayer.appendChild(piece);
+        setTimeout(() => piece.remove(), 1150);
+      }
+    }
+
+    // Inline icon helper for Painting / Sculpture / Architecture badge
+    function getMediumIconSVG(medium) {
+      if (medium === "Painting") {
+        return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/></svg>`;
+      }
+      if (medium === "Sculpture") {
+        return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="18" width="14" height="4" rx="1"/><path d="M9 18v-5a3 3 0 0 1 6 0v5"/><circle cx="12" cy="6" r="3"/></svg>`;
+      }
+      return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-8h6v8"/></svg>`;
+    }
+
+    /* ==========================================================================
+       5. CORE GAMEPLAY FLOW
+       ========================================================================== */
+    function initNewGame() {
+      scores = Array(playerCount).fill(0);
+      currentRoundIndex = 0;
+      currentPlayerIndex = 0;
+
+      // Guarantee every player gets an equal number of turns (6 rounds for 2-3 players, 8 for 4 players)
+      totalRounds = playerCount === 4 ? 8 : 6;
+      const paintingsCount = playerCount === 4 ? 3 : 2;
+      const sculpturesCount = playerCount === 4 ? 3 : 2;
+      const architectureCount = 2;
+
+      // Deal a balanced, shuffled deck across Painting, Sculpture, and Architecture
+      const paintings = shuffleArray(ARTWORKS.filter(a => a.medium === "Painting")).slice(0, paintingsCount);
+      const sculptures = shuffleArray(ARTWORKS.filter(a => a.medium === "Sculpture")).slice(0, sculpturesCount);
+      const architecture = shuffleArray(ARTWORKS.filter(a => a.medium === "Architecture")).slice(0, architectureCount);
+      roundDeck = shuffleArray([...paintings, ...sculptures, ...architecture]);
+
+      renderScoreboard();
+      loadRound();
+      showScreen(gameScreen);
+    }
+
+    function renderScoreboard() {
+      scoreboardStrip.innerHTML = "";
+      scores.forEach((pts, idx) => {
+        const chip = document.createElement("div");
+        chip.className = "score-chip" + (idx === currentPlayerIndex ? " active-turn" : "");
+        chip.innerHTML = `
+          <span class="p-name">Player ${idx + 1}</span>
+          <span class="p-pts">${pts} pt${pts === 1 ? "" : "s"}</span>
+        `;
+        scoreboardStrip.appendChild(chip);
+      });
+    }
+
+    function loadRound() {
+      const item = roundDeck[currentRoundIndex];
+      firstTryAvailable = true;
+      roundSolved = false;
+
+      // Update HUD
+      roundIndicator.textContent = `Round ${currentRoundIndex + 1} of ${totalRounds}`;
+      turnIndicator.textContent = `Player ${currentPlayerIndex + 1}'s Turn`;
+      renderScoreboard();
+
+      // Update Clue Stage
+      mediumBadge.innerHTML = `${getMediumIconSVG(item.medium)} ${item.medium}`;
+      visualFrame.innerHTML = item.svg;
+      vibeClueText.textContent = `“${item.vibe}”`;
+      funFactBox.classList.remove("visible");
+      funFactBox.textContent = "";
+
+      // Reset Feedback & Next Button
+      feedbackBanner.className = "feedback-bar feedback-neutral";
+      feedbackBanner.textContent = `Player ${currentPlayerIndex + 1}, tap the matching artwork & creator!`;
+      nextRoundBtn.style.display = "none";
+
+      // Build 4 shuffled answer options (1 exact match + 3 contrasting distractors)
+      const options = shuffleArray([
+        { title: item.title, artist: item.artist, isCorrect: true },
+        ...item.distractors.map(d => ({ title: d.title, artist: d.artist, isCorrect: false }))
+      ]);
+
+      choicesGrid.innerHTML = "";
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "choice-btn";
+        btn.innerHTML = `
+          <span class="choice-title">${opt.title}</span>
+          <span class="choice-artist">${opt.artist}</span>
+        `;
+        btn.addEventListener("click", () => handleChoiceTap(btn, opt));
+        choicesGrid.appendChild(btn);
+      });
+    }
+
+    function handleChoiceTap(btn, option) {
+      if (roundSolved || btn.classList.contains("eliminated")) return;
+
+      if (option.isCorrect) {
+        const currentItem = roundDeck[currentRoundIndex];
+        roundSolved = true;
+        btn.classList.add("revealed-correct");
+        triggerHappyBurst();
+
+        if (firstTryAvailable) {
+          scores[currentPlayerIndex] += 1;
+          feedbackBanner.className = "feedback-bar feedback-correct";
+          feedbackBanner.textContent = `✨ Nailed it! +1 point for Player ${currentPlayerIndex + 1}!`;
+        } else {
+          feedbackBanner.className = "feedback-bar feedback-correct";
+          feedbackBanner.textContent = `✨ Solved! Ready for the next round.`;
+        }
+
+        funFactBox.textContent = `Gallery Note: ${currentItem.fact}`;
+        funFactBox.classList.add("visible");
+
+        renderScoreboard();
+
+        // Disable remaining buttons cleanly
+        document.querySelectorAll(".choice-btn").forEach(b => {
+          b.disabled = true;
+        });
+
+        nextRoundBtn.textContent = currentRoundIndex + 1 < totalRounds ? "Next Round →" : "See Final Scores →";
+        nextRoundBtn.style.display = "inline-flex";
+      } else {
+        // Gentle, warm "try again" without scolding
+        firstTryAvailable = false;
+        btn.classList.add("eliminated");
+        btn.disabled = true;
+
+        feedbackBanner.className = "feedback-bar feedback-wrong";
+        // Re-trigger gentle wiggle animation
+        void feedbackBanner.offsetWidth;
+        feedbackBanner.textContent = "Not quite—take a closer look and try again!";
+      }
+    }
+
+    function advanceTurnOrEnd() {
+      if (currentRoundIndex + 1 < totalRounds) {
+        currentRoundIndex += 1;
+        currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+        loadRound();
+      } else {
+        showEndScreen();
+      }
+    }
+
+    function showEndScreen() {
+      const maxScore = Math.max(...scores);
+      const winners = scores
+        .map((s, i) => ({ player: `Player ${i + 1}`, score: s }))
+        .filter(p => p.score === maxScore);
+
+      if (winners.length === 1) {
+        winnerHeadline.textContent = `🎉 ${winners[0].player} Wins!`;
+      } else {
+        winnerHeadline.textContent = `🎉 Tie Game: ${winners.map(w => w.player).join(" & ")}!`;
+      }
+
+      finalScoresList.innerHTML = "";
+      scores.forEach((pts, idx) => {
+        const row = document.createElement("div");
+        const isWinner = pts === maxScore;
+        row.className = "final-row" + (isWinner ? " top-winner" : "");
+        row.innerHTML = `
+          <span>${isWinner ? "🏆 " : ""}Player ${idx + 1}</span>
+          <span>${pts} point${pts === 1 ? "" : "s"}</span>
+        `;
+        finalScoresList.appendChild(row);
+      });
+
+      showScreen(endScreen);
+      triggerHappyBurst();
+    }
+
+    /* ==========================================================================
+       6. EVENT LISTENERS
+       ========================================================================== */
+    countButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        countButtons.forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        playerCount = parseInt(btn.dataset.players, 10);
+      });
+    });
+
+    startBtn.addEventListener("click", initNewGame);
+    nextRoundBtn.addEventListener("click", advanceTurnOrEnd);
+    playAgainBtn.addEventListener("click", () => {
+      showScreen(startScreen);
+    });
+  </script>
+</body>
+</html>
